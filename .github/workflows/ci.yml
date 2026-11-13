@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, tipe, uji, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: depo
+          POSTGRES_PASSWORD: depo
+          POSTGRES_DB: depo_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U depo -d depo_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://depo:depo@localhost:5432/depo_ci
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Uji unit
+        run: pnpm test
+      - name: Periksa skema baseline (tanpa sequence, UUID v7, ledger append-only)
+        run: |
+          psql "postgres://depo:depo@localhost:5432/postgres" -c "CREATE DATABASE depo_schema_check"
+          DATABASE_URL="postgres://depo:depo@localhost:5432/depo_schema_check" ./scripts/check-schema.sh
+      - name: Migrasi dari nol
+        run: pnpm db:migrate
+      - name: Uji integrasi (Postgres + Redis asli, termasuk konkurensi stok)
+        run: pnpm test:integration
+      - name: Uji e2e API (Supertest)
+        run: pnpm db:seed && pnpm test:e2e
+      - name: Kontrak OpenAPI tidak berubah diam-diam
+        run: |
+          pnpm openapi:export
+          git diff --exit-code docs/openapi.json || (echo "docs/openapi.json berubah: commit hasil pnpm openapi:export" && exit 1)
+      - name: Build
+        run: pnpm build
+
+  security:
+    name: Pindai dependensi
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level high

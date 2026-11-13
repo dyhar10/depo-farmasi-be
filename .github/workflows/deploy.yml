@@ -1,0 +1,97 @@
+name: Deploy
+
+# main -> staging otomatis. Tag vX.Y.Z -> produksi (environment "production" wajib disetujui).
+# Repo ini membangun dan men-deploy image API (api + worker + migrasi). Image web dikelola repo frontend.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/depo-farmasi-api
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/depo-farmasi-web
+
+jobs:
+  build:
+    name: Build dan push image API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile   # dibuat di Fase 0 (FR-0.1)
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.API_IMAGE }}:${{ github.ref_type == 'tag' && github.ref_name || 'main' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Pindai image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.API_IMAGE }}:${{ steps.meta.outputs.tag }}
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          ignore-unfixed: true
+
+  deploy-staging:
+    name: Deploy staging
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy API lewat SSH
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          install -m 600 /dev/null key && printf '%s\n' "$SSH_KEY" > key
+          scp -i key -o StrictHostKeyChecking=accept-new deploy/docker-compose.deploy.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh "$USER@$HOST:/opt/depo/"
+          ssh -i key "$USER@$HOST" "cd /opt/depo && API_IMAGE=$API_IMAGE WEB_IMAGE=$WEB_IMAGE ./deploy.sh staging api $TAG"
+      - name: Health check
+        run: curl --fail --retry 10 --retry-delay 6 "https://${{ vars.APP_URL }}/health/ready"
+
+  deploy-production:
+    name: Deploy produksi
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production          # atur "Required reviewers" di GitHub Environments
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backup, lalu deploy API (migrasi, rolling update)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          install -m 600 /dev/null key && printf '%s\n' "$SSH_KEY" > key
+          scp -i key -o StrictHostKeyChecking=accept-new deploy/docker-compose.deploy.yml deploy/Caddyfile deploy/deploy.sh deploy/backup.sh "$USER@$HOST:/opt/depo/"
+          ssh -i key "$USER@$HOST" "cd /opt/depo && ./backup.sh pre-release-${{ github.ref_name }}"
+          ssh -i key "$USER@$HOST" "cd /opt/depo && API_IMAGE=$API_IMAGE WEB_IMAGE=$WEB_IMAGE ./deploy.sh production api $TAG"
+      - name: Health check
+        run: curl --fail --retry 10 --retry-delay 6 "https://${{ vars.APP_URL }}/health/ready"
