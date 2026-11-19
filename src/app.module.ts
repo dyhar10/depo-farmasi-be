@@ -5,6 +5,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { MasterModule } from './modules/master/master.module';
 import { Request, Response, NextFunction } from 'express';
 import { generateUuidV7 } from './common/utils/uuid';
 
@@ -16,6 +17,7 @@ import { generateUuidV7 } from './common/utils/uuid';
     PlatformModule,
     AuthModule,
     UsersModule,
+    MasterModule,
   ],
 })
 export class AppModule implements NestModule {

@@ -7,8 +7,8 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let authRepo: Partial<AuthRepository>;
-  let auditService: Partial<AuditService>;
+  let authRepo: any;
+  let auditService: any;
 
   beforeEach(() => {
     authRepo = {

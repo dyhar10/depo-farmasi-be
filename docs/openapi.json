@@ -1,0 +1,714 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_getLive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Layanan aktif"
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_getReady",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Layanan dan dependensi siap"
+          },
+          "503": {
+            "description": "Database atau Redis tidak tersedia"
+          }
+        },
+        "summary": "Readiness probe",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Kredensial tidak valid"
+          },
+          "403": {
+            "description": "Akun terkunci sementara"
+          }
+        },
+        "summary": "Login pengguna dengan username dan password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotasi refresh token dan dapatkan access token baru",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Logout dan mencabut refresh token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ganti password pengguna",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mendapatkan data profil, peran, lokasi, dan hak akses aktif",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "UserController_listUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mendapatkan daftar semua pengguna",
+        "tags": [
+          "Users & RBAC"
+        ]
+      },
+      "post": {
+        "operationId": "UserController_createUser",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat pengguna baru",
+        "tags": [
+          "Users & RBAC"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UserController_getUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mendapatkan detail pengguna",
+        "tags": [
+          "Users & RBAC"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_updateUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah profil atau status pengguna",
+        "tags": [
+          "Users & RBAC"
+        ]
+      },
+      "delete": {
+        "operationId": "UserController_deleteUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Menghapus (soft delete) pengguna",
+        "tags": [
+          "Users & RBAC"
+        ]
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "operationId": "UserController_listRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mendapatkan daftar semua peran",
+        "tags": [
+          "Users & RBAC"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/roles": {
+      "put": {
+        "operationId": "UserController_assignRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Menetapkan peran dan lokasi untuk pengguna",
+        "tags": [
+          "Users & RBAC"
+        ]
+      }
+    },
+    "/api/v1/items": {
+      "get": {
+        "operationId": "MasterController_listItems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar dan pencarian cepat item obat/BMHP",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createItem",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat item baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/items/{id}": {
+      "get": {
+        "operationId": "MasterController_getItem",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Detail item obat/BMHP",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "patch": {
+        "operationId": "MasterController_updateItem",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah master item obat/BMHP",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/items/{id}/planning-params": {
+      "put": {
+        "operationId": "MasterController_updatePlanningParams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Memperbarui parameter perencanaan item",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/item-categories": {
+      "get": {
+        "operationId": "MasterController_listCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar hierarki kategori obat dan BMHP",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createCategory",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat kategori baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/item-categories/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateCategory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah kategori",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/units": {
+      "get": {
+        "operationId": "MasterController_listUnits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar semua satuan baku",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createUnit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat satuan baku baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/units/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateUnit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah satuan baku",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/dosage-forms": {
+      "get": {
+        "operationId": "MasterController_listDosageForms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar semua bentuk sediaan",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createDosageForm",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat bentuk sediaan baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/dosage-forms/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateDosageForm",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah bentuk sediaan",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/suppliers": {
+      "get": {
+        "operationId": "MasterController_listSuppliers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar semua pemasok / distributor",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createSupplier",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat supplier baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/suppliers/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateSupplier",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah data supplier",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/locations": {
+      "get": {
+        "operationId": "MasterController_listLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Daftar semua lokasi",
+        "tags": [
+          "Master Data"
+        ]
+      },
+      "post": {
+        "operationId": "MasterController_createLocation",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Membuat lokasi baru",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    },
+    "/api/v1/locations/{id}": {
+      "patch": {
+        "operationId": "MasterController_updateLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengubah data lokasi",
+        "tags": [
+          "Master Data"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Depo Farmasi API",
+    "description": "API Pengadaan dan Pengelolaan Barang Depo Farmasi (Obat dan BMHP)",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expires_in": {
+            "type": "number",
+            "example": 900
+          },
+          "must_change_password": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "must_change_password"
+        ]
+      }
+    }
+  }
+}

@@ -28,16 +28,16 @@ export class ChangePasswordDto {
 }
 
 export class AuthResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String, example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
   access_token!: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String, example: 'Bearer' })
   token_type!: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: Number, example: 900 })
   expires_in!: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: Boolean, example: false })
   must_change_password!: boolean;
 }
 
