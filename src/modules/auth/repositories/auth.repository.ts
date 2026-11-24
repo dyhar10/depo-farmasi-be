@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 import { Database } from '../../../infrastructure/database/kysely.types';
 import { KYSELY } from '../../../infrastructure/database/database.service';
 import { generateUuidV7 } from '../../../common/utils/uuid';

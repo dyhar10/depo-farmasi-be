@@ -663,6 +663,180 @@
           "Master Data"
         ]
       }
+    },
+    "/api/v1/stock": {
+      "get": {
+        "description": "Menampilkan saldo stok, status ketersediaan (cito, menipis, aman), dan nilai persediaan.",
+        "operationId": "StockController_getStock",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Daftar saldo stok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockBalanceItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Melihat ringkasan saldo stok (per item & lokasi)",
+        "tags": [
+          "Stock"
+        ]
+      }
+    },
+    "/api/v1/items/{id}/stock": {
+      "get": {
+        "description": "Menampilkan rincian batch, tanggal kadaluarsa (ED), harga pokok, dan nilai persediaan per lokasi.",
+        "operationId": "StockController_getItemStock",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rincian stok item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemStockDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Melihat rincian stok per item (per lokasi & batch)",
+        "tags": [
+          "Stock"
+        ]
+      }
+    },
+    "/api/v1/imports": {
+      "post": {
+        "description": "Mendukung tipe items, opening_balance, suppliers, dan locations. Default dry_run=true untuk memverifikasi data dan menampilkan rekonsiliasi.",
+        "operationId": "ImportController_uploadImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "import_type": {
+                    "type": "string",
+                    "enum": [
+                      "items",
+                      "opening_balance",
+                      "suppliers",
+                      "locations"
+                    ]
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "file",
+                  "import_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job impor berhasil dibuat dan divalidasi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unggah berkas Excel untuk validasi (dry-run) atau eksekusi langsung",
+        "tags": [
+          "Imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{id}": {
+      "get": {
+        "operationId": "ImportController_getImportJob",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rincian job impor beserta daftar galat per baris",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Melihat status, ringkasan rekonsiliasi, dan daftar galat impor",
+        "tags": [
+          "Imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{id}/execute": {
+      "post": {
+        "operationId": "ImportController_executeImport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Job impor berhasil dieksekusi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mengeksekusi job impor yang sudah divalidasi (menulis data ke database)",
+        "tags": [
+          "Imports"
+        ]
+      }
     }
   },
   "info": {
@@ -707,6 +881,357 @@
           "token_type",
           "expires_in",
           "must_change_password"
+        ]
+      },
+      "StockBalanceItemDto": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443653"
+          },
+          "item_code": {
+            "type": "string",
+            "example": "AA0096"
+          },
+          "item_name": {
+            "type": "string",
+            "example": "Paracetamol"
+          },
+          "item_type": {
+            "type": "string",
+            "example": "obat"
+          },
+          "location_id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443654"
+          },
+          "location_name": {
+            "type": "string",
+            "example": "Gudang Farmasi Utama"
+          },
+          "quantity": {
+            "type": "string",
+            "example": "150.000"
+          },
+          "safety_stock": {
+            "type": "string",
+            "example": "50.000"
+          },
+          "min_stock": {
+            "type": "string",
+            "example": "100.000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "cito",
+              "menipis_cito",
+              "menipis",
+              "aman"
+            ],
+            "example": "aman"
+          },
+          "total_valuation": {
+            "type": "string",
+            "example": "750000.0000"
+          }
+        },
+        "required": [
+          "item_id",
+          "item_code",
+          "item_name",
+          "item_type",
+          "location_id",
+          "location_name",
+          "quantity",
+          "safety_stock",
+          "min_stock",
+          "status",
+          "total_valuation"
+        ]
+      },
+      "BatchStockDto": {
+        "type": "object",
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443655"
+          },
+          "batch_number": {
+            "type": "string",
+            "example": "LEGACY-1"
+          },
+          "expiry_date": {
+            "type": "string",
+            "example": "2027-12-31"
+          },
+          "unit_cost": {
+            "type": "string",
+            "example": "5000.0000"
+          },
+          "quantity": {
+            "type": "string",
+            "example": "100.000"
+          },
+          "is_legacy": {
+            "type": "boolean",
+            "example": true
+          },
+          "valuation": {
+            "type": "string",
+            "example": "500000.0000"
+          }
+        },
+        "required": [
+          "batch_id",
+          "batch_number",
+          "unit_cost",
+          "quantity",
+          "is_legacy",
+          "valuation"
+        ]
+      },
+      "LocationStockDetailDto": {
+        "type": "object",
+        "properties": {
+          "location_id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443654"
+          },
+          "location_code": {
+            "type": "string",
+            "example": "GUDANG-01"
+          },
+          "location_name": {
+            "type": "string",
+            "example": "Gudang Farmasi Utama"
+          },
+          "quantity": {
+            "type": "string",
+            "example": "150.000"
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchStockDto"
+            }
+          }
+        },
+        "required": [
+          "location_id",
+          "location_code",
+          "location_name",
+          "quantity",
+          "batches"
+        ]
+      },
+      "ItemStockDetailDto": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443653"
+          },
+          "item_code": {
+            "type": "string",
+            "example": "AA0096"
+          },
+          "item_name": {
+            "type": "string",
+            "example": "Paracetamol"
+          },
+          "total_quantity": {
+            "type": "string",
+            "example": "150.000"
+          },
+          "total_valuation": {
+            "type": "string",
+            "example": "750000.0000"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationStockDetailDto"
+            }
+          }
+        },
+        "required": [
+          "item_id",
+          "item_code",
+          "item_name",
+          "total_quantity",
+          "total_valuation",
+          "locations"
+        ]
+      },
+      "ImportJobResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443653"
+          },
+          "import_type": {
+            "type": "string",
+            "enum": [
+              "items",
+              "opening_balance",
+              "suppliers",
+              "locations"
+            ],
+            "example": "items"
+          },
+          "filename": {
+            "type": "string",
+            "example": "master_item_mei_2026.xlsx"
+          },
+          "file_sha256": {
+            "type": "string",
+            "example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "validating",
+              "validated",
+              "importing",
+              "completed",
+              "failed"
+            ],
+            "example": "validated"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "example": true
+          },
+          "summary": {
+            "type": "object",
+            "example": {
+              "totalRows": 1374,
+              "validRows": 1370,
+              "invalidRows": 4
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-11-24T10:00:00.000Z"
+          },
+          "finished_at": {
+            "type": "string",
+            "example": "2026-11-24T10:01:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "import_type",
+          "filename",
+          "file_sha256",
+          "status",
+          "dry_run",
+          "summary",
+          "created_at"
+        ]
+      },
+      "ImportJobErrorDto": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string",
+            "example": "Sheet1"
+          },
+          "row_number": {
+            "type": "number",
+            "example": 15
+          },
+          "field": {
+            "type": "string",
+            "example": "code"
+          },
+          "message": {
+            "type": "string",
+            "example": "Kode item duplikat dalam database"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ImportJobDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "01934335-508b-7c30-97c7-578841443653"
+          },
+          "import_type": {
+            "type": "string",
+            "enum": [
+              "items",
+              "opening_balance",
+              "suppliers",
+              "locations"
+            ],
+            "example": "items"
+          },
+          "filename": {
+            "type": "string",
+            "example": "master_item_mei_2026.xlsx"
+          },
+          "file_sha256": {
+            "type": "string",
+            "example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "validating",
+              "validated",
+              "importing",
+              "completed",
+              "failed"
+            ],
+            "example": "validated"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "example": true
+          },
+          "summary": {
+            "type": "object",
+            "example": {
+              "totalRows": 1374,
+              "validRows": 1370,
+              "invalidRows": 4
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2026-11-24T10:00:00.000Z"
+          },
+          "finished_at": {
+            "type": "string",
+            "example": "2026-11-24T10:01:00.000Z"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportJobErrorDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "import_type",
+          "filename",
+          "file_sha256",
+          "status",
+          "dry_run",
+          "summary",
+          "created_at",
+          "errors"
         ]
       }
     }

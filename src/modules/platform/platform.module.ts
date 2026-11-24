@@ -3,12 +3,13 @@ import { HealthController } from './controllers/health.controller';
 import { HealthService } from './services/health.service';
 import { DocumentCounterService } from './services/document-counter.service';
 import { IdempotencyService } from './services/idempotency.service';
+import { OutboxService } from './services/outbox.service';
 
 @Global()
 @Module({
   controllers: [HealthController],
-  providers: [HealthService, DocumentCounterService, IdempotencyService],
-  exports: [HealthService, DocumentCounterService, IdempotencyService],
+  providers: [HealthService, DocumentCounterService, IdempotencyService, OutboxService],
+  exports: [HealthService, DocumentCounterService, IdempotencyService, OutboxService],
 })
 export class PlatformModule {}
 

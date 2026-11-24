@@ -11,27 +11,36 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private pool!: Pool;
   public kysely!: Kysely<Database>;
 
+  constructor() {
+    this.init();
+  }
+
+  private init() {
+    if (!this.kysely) {
+      const env = validateEnv();
+      this.pool = new Pool({
+        connectionString: env.DATABASE_URL,
+        max: 20,
+      });
+
+      const dialect = new PostgresDialect({
+        pool: this.pool,
+      });
+
+      this.kysely = new Kysely<Database>({
+        dialect,
+      });
+    }
+  }
+
   onModuleInit() {
-    const env = validateEnv();
-    this.pool = new Pool({
-      connectionString: env.DATABASE_URL,
-      max: 20,
-    });
-
-    const dialect = new PostgresDialect({
-      pool: this.pool,
-    });
-
-    this.kysely = new Kysely<Database>({
-      dialect,
-    });
+    this.init();
   }
 
   async onModuleDestroy() {
     if (this.kysely) {
       await this.kysely.destroy();
-    }
-    if (this.pool) {
+    } else if (this.pool) {
       await this.pool.end();
     }
   }

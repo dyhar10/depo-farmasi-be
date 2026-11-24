@@ -6,7 +6,9 @@ import { PlatformModule } from './modules/platform/platform.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MasterModule } from './modules/master/master.module';
-import { Request, Response, NextFunction } from 'express';
+import { StockModule } from './modules/stock/stock.module';
+import { ImportsModule } from './modules/imports/imports.module';
+import type { Request, Response, NextFunction } from 'express';
 import { generateUuidV7 } from './common/utils/uuid';
 
 @Module({
@@ -18,6 +20,8 @@ import { generateUuidV7 } from './common/utils/uuid';
     AuthModule,
     UsersModule,
     MasterModule,
+    StockModule,
+    ImportsModule,
   ],
 })
 export class AppModule implements NestModule {
